@@ -1,0 +1,9 @@
+{
+    "raw_train" : "data/ratings_train.txt",
+    "raw_test" : "data/ratings_test.txt",
+    "train" : "data/train",
+    "validation" : "data/validation",
+    "test" : "data/test",
+    "min_freq" : 5,
+    "num_row" : 10240
+}
