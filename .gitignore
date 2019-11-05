@@ -1,2 +1,2 @@
-tf1-14/data/.
-tf1-14/experiments/.
+tf1-14/data/**
+tf1-14/experiments/**
