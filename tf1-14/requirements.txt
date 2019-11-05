@@ -2,3 +2,5 @@
 sentencepiece
 gluonnlp
 pandas
+sklearn
+bokeh

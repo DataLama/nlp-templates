@@ -1,1 +1,2 @@
-experiments/base_model/checkpoints
+tf1-14/data/.
+tf1-14/experiments/.
