@@ -1,5 +1,9 @@
 from typing import List, Callable, Union, Dict
+import gluonnlp as nlp
 
+def split_fn(doc): 
+    sp = nlp.data.SentencepieceTokenizer('utils/skt_tokenizer_78b3253a26.model')
+    return sp(doc)
 
 class Vocab:
     """Vocab class"""

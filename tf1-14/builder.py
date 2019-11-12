@@ -11,10 +11,9 @@ from pathlib import Path
 from collections import Counter
 from multiprocessing import Pool
 from sklearn.model_selection import train_test_split
-from utils.utils import Vocab, Tokenizer
+from utils.utils import split_fn, Vocab, Tokenizer
 
 SP = nlp.data.SentencepieceTokenizer('utils/skt_tokenizer_78b3253a26.model')
-def split_fn(doc): return SP(doc)
 
 class BuilderPtrEmbed(object):
     """Builder class"""
@@ -29,7 +28,8 @@ class BuilderPtrEmbed(object):
         self.config_path = config_path
         self.cwd = Path.cwd()
         self.vocab = Vocab(self.sp.tokens, padding_token = '<pad>', unknown_token = '<unk>', bos_token = None, eos_token = None, token_to_idx = {'<unk>': 1})
-               
+        self.index = dict()
+
         with open(self.config_path) as f:
             self.config = json.load(f)
             
@@ -45,11 +45,14 @@ class BuilderPtrEmbed(object):
             array = tmp_vocab.embedding.idx_to_vec.asnumpy()
             array[1] = array.mean(axis=0)
             embedding_list.append(array)
+            OOV = int(((array == 0.).sum(axis=1) == array.shape[1]).sum())
+            print(f"The number of OOV is {OOV} by {array.shape[0]}")
+            self.index.update({"OOV":OOV})
         
         self.vocab.embedding = embedding_list
         
-        self.config.update({'token2idx': self.vocab.token_to_idx})
-        self.config.update({'idx2token': {v:k for k, v in self.vocab.token_to_idx.items()}})
+        self.index.update({'token2idx': self.vocab.token_to_idx})
+        self.index.update({'idx2token': {v:k for k, v in self.vocab.token_to_idx.items()}})
     
     def save_vocab(self):
         vocab_file = 'data/vocab.pkl'
@@ -75,14 +78,14 @@ class BuilderPtrEmbed(object):
         dataset = self._load_dataset(self.cwd / self.config['raw_train'])
         
         label = sorted(dataset['class'].unique())
-        self.config.update({'label2idx' : {c : i for i, c in enumerate(label)}})
-        self.config.update({'idx2label' : {i : c for i, c in enumerate(label)}})
-        dataset['class'] = [self.config['label2idx'][x] for x in dataset['class'].to_list()]
+        self.index.update({'label2idx' : {c : i for i, c in enumerate(label)}})
+        self.index.update({'idx2label' : {i : c for i, c in enumerate(label)}})
+        dataset['class'] = [self.index['label2idx'][x] for x in dataset['class'].to_list()]
         
         train, validation = train_test_split(dataset, test_size=0.1, random_state=777)
         
         test = self._load_dataset(self.cwd / self.config['raw_test'])
-        test['class'] = [self.config['label2idx'][x] for x in test['class'].to_list()]
+        test['class'] = [self.index['label2idx'][x] for x in test['class'].to_list()]
         
         #### split and transform
         tokenizer = Tokenizer(vocab = self.vocab, split_fn = split_fn)
@@ -107,6 +110,8 @@ class BuilderPtrEmbed(object):
     def save_config(self):
         with open(self.config_path, 'w') as f:
             json.dump(self.config, f)
+        with open('data/index.json', 'w') as f:
+            json.dump(self.index, f)
             
 def main():
     config_path = 'data/config.json'
