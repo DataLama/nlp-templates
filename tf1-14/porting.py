@@ -30,11 +30,11 @@ def _mkdir(path):
     os.makedirs(path, exist_ok = True)
     
 def _port2model_farm(sin_model_path):
-    model_farm_path = '/root/.model_farm'
+    model_farm_path = '/data/.model_farm'
     model_name = sin_model_path.split('/')[-1]
     
     if not os.path.exists(model_farm_path):
-        _mkdir({model_farm_path})
+        _mkdir(model_farm_path)
  
     while True:
         if os.path.exists(f'{model_farm_path}/{model_name}'):
@@ -49,7 +49,7 @@ def _port2model_farm(sin_model_path):
     subprocess.run([f'cp {sin_model_path}/history.json {model_farm_path}/{model_name}'], shell = True)         # history.json file
     subprocess.run([f'cp {sin_model_path}/hyper_params.json {model_farm_path}/{model_name}'], shell = True)    # hyper_params.json
     subprocess.run([f'cp -r {sin_model_path}/checkpoints {model_farm_path}/{model_name}'], shell = True)       # checkpoints
-    subprocess.run([f'cp data/config.json {model_farm_path}/{model_name}'], shell = True)                      # index of token and label.
+    subprocess.run([f'cp data/index.json {model_farm_path}/{model_name}'], shell = True)                      # index of token and label.
     subprocess.run([f'cp -r utils {model_farm_path}/{model_name}'], shell = True)                              # utils
 
 def main():
@@ -79,7 +79,7 @@ def main():
         subprocess.run([f'cp -r {model_path}/saved_model {serve_path}'], shell = True)    # tensorflow serving model.
         subprocess.run([f'cp -r utils {serve_path}'], shell = True)                       # tokenizer and basic utilities.
         subprocess.run([f'cp {model_path}/hyper_params.json {serve_path}'], shell = True) # hyperparameter of the model.
-        subprocess.run([f'cp data/config.json {serve_path}'], shell = True)               # index of token and label.
+        subprocess.run([f'cp data/index.json {serve_path}'], shell = True)               # index of token and label.
         
         
     else:
